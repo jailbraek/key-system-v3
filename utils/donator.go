@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 )
@@ -59,6 +60,7 @@ func GenerateDonatorKeyStub(encKey []byte) (string, error) {
 }
 
 func RedeemKeyStub(ks, ip, version string, encKey, keyGenKey []byte) string {
+	loadConfig()
 	dec, err := Decrypt(ks, encKey)
 	if err != nil {
 		return ""
@@ -76,6 +78,7 @@ func RedeemKeyStub(ks, ip, version string, encKey, keyGenKey []byte) string {
 			break
 		}
 	}
+	fmt.Printf("Donator %d redeemed key stub\n", k.Data.Id)
 	if !inArray {
 		return ""
 	}

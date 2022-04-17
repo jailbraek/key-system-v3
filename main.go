@@ -84,7 +84,9 @@ func main() {
 			bid = utils.GenerateBrowserID()
 			enc, err := utils.Encrypt([]byte(bid), key)
 			if err != nil {
-				return err
+				fmt.Println("Some kid is fucking with bid: ", err)
+				c.Set("refresh", "5;url=/")
+				return c.SendStatus(400)
 			}
 			b := fiber.Cookie{
 				Name:    BID,
@@ -165,7 +167,7 @@ func main() {
 		}
 		stub, err := utils.GenerateDonatorKeyStub(keyStubKey)
 		if err != nil {
-			return err
+			return c.SendStatus(400)
 		}
 		return c.SendString(stub)
 	})
@@ -175,6 +177,7 @@ func main() {
 		if len(e) == 0 {
 			return c.Status(404).SendString("Cannot GET /donator/redeem/" + d)
 		}
+		fmt.Println("Donator Key Redeemed by:", utils.HashIP(c.IP()))
 		enc, err := utils.Encrypt([]byte(e), key)
 		if err != nil {
 			return c.Status(500).SendString("Error generating key, contact a developer.")
@@ -206,6 +209,7 @@ func main() {
 		err = json.Unmarshal([]byte(dec), &cp)
 		if err != nil {
 			fmt.Println("checkpoint 1 unmarshal err: ", err)
+			fmt.Println(dec)
 			return c.Redirect("/")
 		}
 		bid := c.Cookies(BID)
@@ -271,11 +275,13 @@ func main() {
 		err = json.Unmarshal([]byte(dec), &cp)
 		if err != nil {
 			fmt.Println("checkpoint 1 unmarshal err: ", err)
+			fmt.Println(dec)
 			return c.Redirect("/")
 		}
 		err = json.Unmarshal([]byte(dec2), &cp1)
 		if err != nil {
 			fmt.Println("checkpoint 1 unmarshal err: ", err)
+			fmt.Println(dec2)
 			return c.Redirect("/checkpoints/1")
 		}
 		bid := c.Cookies(BID)
@@ -368,16 +374,19 @@ func main() {
 		err = json.Unmarshal([]byte(homeData), &home)
 		if err != nil {
 			fmt.Println("home unmarshal err: ", err)
+			fmt.Println(homeData)
 			return c.Redirect("/")
 		}
 		err = json.Unmarshal([]byte(cp1Data), &cp1)
 		if err != nil {
 			fmt.Println("checkpoint 1 unmarshal err: ", err)
+			fmt.Println(cp1Data)
 			return c.Redirect("/")
 		}
 		err = json.Unmarshal([]byte(cp2Data), &cp2)
 		if err != nil {
 			fmt.Println("checkpoint 2 unmarshal err: ", err)
+			fmt.Println(cp2Data)
 			return c.Redirect("/")
 		}
 		if home.Ip != ip || cp1.Ip != ip || cp2.Ip != ip || home.BrowserID != bid || cp1.BrowserID != bid || cp2.BrowserID != bid || home.Time < time.Now().Unix()-((60*16)*1000) || cp1.Time < time.Now().Unix()-((60*14)*1000) || cp2.Time < time.Now().Unix()-((60*12)*1000) {
@@ -465,6 +474,11 @@ func main() {
 		}
 		ip := utils.HashIP(c.IP())
 		return c.SendString(ip)
+	})
+	app.Get("/pingCheck", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status": "up",
+		})
 	})
 	log.Fatalln(app.Listen(":5001"))
 }
