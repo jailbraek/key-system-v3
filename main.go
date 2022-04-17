@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"log"
+	"os"
 	"time"
 )
 
@@ -18,8 +19,10 @@ const (
 	BID            = "eb"
 	STAFFK         = "sfd"
 	VERSION        = "v3.0"
+	IDENTITY       = "DARKHUB-v3.0-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
 	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
-	Checkpoint2Url = "https://work.ink/l/1n8/DarkHubCheckPoint2/"
+	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
+	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
 )
 
 var (
@@ -42,7 +45,20 @@ var (
 */
 
 func main() {
-	app := fiber.New(fiber.Config{AppName: "Dark-Key Sys v3", Prefork: true})
+	app := fiber.New(fiber.Config{
+		Prefork:           true,
+		ServerHeader:      "Your Mom's fat cock",
+		ProxyHeader:       "CF-Connecting-IP",
+		AppName:           "Dark-Key Sys v3",
+		ReduceMemoryUsage: true,
+	})
+	app.Use("/discord", func(c *fiber.Ctx) error {
+		data, err := os.ReadFile("discordinvite.txt")
+		if err != nil {
+			return c.SendStatus(500)
+		}
+		return c.Redirect(string(data))
+	})
 	app.Use("/41BK2NJz9Vond7rYrbAF", monitor.New())
 	app.Get("/", func(c *fiber.Ctx) error {
 		ip := utils.HashIP(c.IP())
@@ -54,12 +70,14 @@ func main() {
 				c.ClearCookie(KEY)
 				return c.Redirect("/")
 			}
-			ck, err := utils.CheckKey(k, ip, VERSION, keyGenKey)
-			if err != nil {
-				c.ClearCookie(KEY)
-			}
-			if ck {
-				return c.Redirect("/I/made/this/in/3/hrs/and/it/works")
+			if string(k) != keyFiller {
+				ck, err := utils.CheckKey(k, ip, VERSION, keyGenKey)
+				if err != nil {
+					c.ClearCookie(KEY)
+				}
+				if ck {
+					return c.Redirect("/I/made/this/in/3/hrs/and/it/works")
+				}
 			}
 		}
 		if len(bid) == 0 {
@@ -101,6 +119,38 @@ func main() {
 			fmt.Println("Some kid just fucked with enc: ", err)
 			return c.Redirect(c.OriginalURL())
 		}
+		cp1Data, err := utils.Encrypt([]byte(Checkpoint1Url), key)
+		if err != nil {
+			fmt.Println("Some kid just fucked with enc: ", err)
+			return c.Redirect(c.OriginalURL())
+		}
+		cp1 := fiber.Cookie{
+			Name:    CHECKPOINT1,
+			Value:   cp1Data,
+			Expires: time.Now().Add(time.Hour * 24),
+		}
+		c.Cookie(&cp1)
+		cp2Data, err := utils.Encrypt([]byte(Checkpoint2Url), key)
+		if err != nil {
+			fmt.Println("Some kid just fucked with enc: ", err)
+			return c.Redirect(c.OriginalURL())
+		}
+		cp2 := fiber.Cookie{
+			Name:    CHECKPOINT2,
+			Value:   cp2Data,
+			Expires: time.Now().Add(time.Hour * 24),
+		}
+		c.Cookie(&cp2)
+		keyData, err := utils.Encrypt([]byte(keyFiller), key)
+		if err != nil {
+			fmt.Println("Some kid just fucked with enc: ", err)
+			return c.Redirect(c.OriginalURL())
+		}
+		key := fiber.Cookie{
+			Name:  KEY,
+			Value: keyData,
+		}
+		c.Cookie(&key)
 		cookie := fiber.Cookie{
 			Name:    HOME,
 			Value:   enc,
@@ -120,12 +170,28 @@ func main() {
 		return c.SendString(stub)
 	})
 	app.Get("/donator/redeem/:key", func(c *fiber.Ctx) error {
-		key := c.Params("key")
-		e := utils.RedeemKeyStub(key, utils.HashIP(c.IP()), VERSION, keyStubKey, keyGenKey)
+		d := c.Params("key")
+		e := utils.RedeemKeyStub(d, utils.HashIP(c.IP()), VERSION, keyStubKey, keyGenKey)
+		if len(e) == 0 {
+			return c.Status(404).SendString("Cannot GET /donator/redeem/" + d)
+		}
+		enc, err := utils.Encrypt([]byte(e), key)
+		if err != nil {
+			return c.Status(500).SendString("Error generating key, contact a developer.")
+		}
+		cookie := fiber.Cookie{
+			Name:    KEY,
+			Value:   enc,
+			Expires: time.Now().Add(time.Hour * 24 * 365 * 10),
+		}
+		c.Cookie(&cookie)
 		return c.SendString(e)
 	})
 	checkpoints := app.Group("/checkpoints")
 	checkpoints.Get("/1", func(c *fiber.Ctx) error {
+		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
+			return c.Redirect("/")
+		}
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
 		if len(home) == 0 {
@@ -185,6 +251,9 @@ func main() {
 		return c.Redirect(Checkpoint2Url)
 	})
 	checkpoints.Get("/2", func(c *fiber.Ctx) error {
+		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
+			return c.Redirect("/")
+		}
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
 		cp1Data := c.Cookies(CHECKPOINT1)
@@ -219,20 +288,16 @@ func main() {
 			return c.Redirect("/")
 		}
 		if cp.Ip != ip || cp1.Ip != ip {
-			fmt.Println("IP Missmatch")
 			c.ClearCookie(HOME)
 			c.ClearCookie(CHECKPOINT1)
 			return c.Redirect("/")
 		}
 		if bid != cp.BrowserID || bid != cp1.BrowserID {
-			fmt.Println(bid)
-			fmt.Println("bid")
 			c.ClearCookie(HOME)
 			c.ClearCookie(CHECKPOINT1)
 			return c.Redirect("/")
 		}
 		if cp.Time < time.Now().Unix()-((60*14)*1000) || cp1.Time < time.Now().Unix()-((60*12)*1000) {
-			fmt.Println("timing")
 			c.ClearCookie(HOME)
 			c.ClearCookie(CHECKPOINT1)
 			return c.Redirect("/")
@@ -345,7 +410,6 @@ func main() {
 	app.Get("/I/made/this/in/3/hrs/and/it/works", func(c *fiber.Ctx) error {
 		k := c.Cookies(KEY)
 		if len(k) == 0 {
-			fmt.Println("no key")
 			return c.Redirect("/")
 		}
 		k, err := utils.Decrypt(k, key)
@@ -370,7 +434,7 @@ func main() {
 			fmt.Println("body parser err: ", err)
 			return c.Redirect("/")
 		}
-		if d.Key == "" {
+		if d.Key == "" || len(d.Key) <= 100 {
 			return c.SendStatus(400)
 		}
 		if b, err := utils.CheckKey(d.Key, ip, VERSION, keyGenKey); !b || err != nil {
@@ -382,10 +446,11 @@ func main() {
 			return c.Redirect("/")
 		}
 		var sd = sendData{
-			Key:     d.Key,
-			Ip:      k.Ip,
-			Version: k.Version,
-			Donator: k.Donator,
+			Key:      d.Key,
+			Ip:       k.Ip,
+			Version:  k.Version,
+			Donator:  k.Donator,
+			Identity: IDENTITY,
 		}
 		b, err := json.Marshal(sd)
 		if err != nil {
@@ -394,7 +459,14 @@ func main() {
 		}
 		return c.SendString(utils.FunnyEncoding(b))
 	})
-	log.Fatalln(app.Listen(":3000"))
+	app.Get("/what/the/he/ll/is/my/ip", func(c *fiber.Ctx) error {
+		if c.GetReqHeaders()["Id"] != IDENTITY {
+			return c.SendStatus(403)
+		}
+		ip := utils.HashIP(c.IP())
+		return c.SendString(ip)
+	})
+	log.Fatalln(app.Listen(":5001"))
 }
 
 type (
@@ -412,9 +484,10 @@ type (
 		Key string `json:"key"`
 	}
 	sendData struct {
-		Key     string `json:"key"`
-		Ip      string `json:"ip"`
-		Version string `json:"version"`
-		Donator bool   `json:"donator"`
+		Key      string `json:"key"`
+		Ip       string `json:"ip"`
+		Version  string `json:"version"`
+		Identity string `json:"identity"`
+		Donator  bool   `json:"donator"`
 	}
 )

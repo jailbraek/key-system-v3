@@ -68,11 +68,16 @@ func RedeemKeyStub(ks, ip, version string, encKey, keyGenKey []byte) string {
 	if err != nil {
 		return ""
 	}
+	var inArray = false
 	for i, v := range DC.Stubs {
-		if v.Time == k.Time {
+		if v.Data.Id == k.Data.Id {
+			inArray = true
 			DC.Stubs = append(DC.Stubs[:i], DC.Stubs[i+1:]...)
-			writeConfig()
+			break
 		}
+	}
+	if !inArray {
+		return ""
 	}
 	key, err := GenerateKey(ip, version, keyGenKey, true, DC.LastID, time.Now().Unix())
 	DC.ActiveIDs = append(DC.ActiveIDs, DC.LastID)
