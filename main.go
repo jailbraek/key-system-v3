@@ -60,7 +60,7 @@ func main() {
 		}
 		return c.Redirect(string(data))
 	})
-	app.Get("/rawDiscord", func(c *fiber.Ctx) error {
+	app.Get("/raw/Discord", func(c *fiber.Ctx) error {
 		data, err := os.ReadFile("discordinvite.txt")
 		if err != nil {
 			return c.SendStatus(500)
