@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -18,8 +19,8 @@ const (
 	KEY            = "Ve"
 	BID            = "eb"
 	STAFFK         = "sfd"
-	VERSION        = "v3.0"
-	IDENTITY       = "DARKHUB-v3.0-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
+	VERSION        = "v3.0.1"
+	IDENTITY       = "DARKHUB-v3.0.1-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
 	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
 	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
 	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
@@ -49,15 +50,22 @@ func main() {
 		Prefork:           true,
 		ServerHeader:      "Your Mom's fat cock",
 		ProxyHeader:       "CF-Connecting-IP",
-		AppName:           "Dark-Key Sys v3",
+		AppName:           "DarkHub KeySys " + VERSION,
 		ReduceMemoryUsage: true,
 	})
-	app.Use("/discord", func(c *fiber.Ctx) error {
+	app.Get("/discord", func(c *fiber.Ctx) error {
 		data, err := os.ReadFile("discordinvite.txt")
 		if err != nil {
 			return c.SendStatus(500)
 		}
 		return c.Redirect(string(data))
+	})
+	app.Get("/rawDiscord", func(c *fiber.Ctx) error {
+		data, err := os.ReadFile("discordinvite.txt")
+		if err != nil {
+			return c.SendStatus(500)
+		}
+		return c.SendString(string(data))
 	})
 	app.Use("/41BK2NJz9Vond7rYrbAF", monitor.New())
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -443,6 +451,7 @@ func main() {
 			fmt.Println("body parser err: ", err)
 			return c.Redirect("/")
 		}
+		d.Key = strings.TrimSpace(d.Key)
 		if d.Key == "" || len(d.Key) <= 100 {
 			return c.SendStatus(400)
 		}
@@ -475,7 +484,7 @@ func main() {
 		ip := utils.HashIP(c.IP())
 		return c.SendString(ip)
 	})
-	app.Get("/pingCheck", func(c *fiber.Ctx) error {
+	app.Get("/status", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status": "up",
 		})

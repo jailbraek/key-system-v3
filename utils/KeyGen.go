@@ -57,9 +57,6 @@ func CheckKey(key, ip, version string, keyGenKey []byte) (bool, error) {
 	if keyStruct.Ip != ip {
 		return false, nil
 	}
-	if keyStruct.Version != version {
-		return false, nil
-	}
 	if keyStruct.Donator {
 		loadConfig()
 		for _, id := range DC.ActiveIDs {
@@ -76,6 +73,9 @@ func CheckKey(key, ip, version string, keyGenKey []byte) (bool, error) {
 				return true, nil
 			}
 		}
+		return false, nil
+	}
+	if keyStruct.Version != version {
 		return false, nil
 	}
 	if keyStruct.Time < time.Now().Unix() {
