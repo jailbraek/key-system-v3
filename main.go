@@ -19,18 +19,27 @@ const (
 	KEY            = "Ve"
 	BID            = "eb"
 	STAFFK         = "sfd"
-	VERSION        = "v3.0.1"
-	IDENTITY       = "DARKHUB-v3.0.1-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
+	VERSION        = "v3.0.2"
+	IDENTITY       = "DARKHUB-v3.0.2-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
 	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
 	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
 	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
 )
 
 var (
-	key        = []byte("iHOFtYu6Hv0kQz6%ZMf2G1!VM76aD2f!")
-	keyGenKey  = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
-	keyStubKey = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
+	webhookSecret = ""
+	key           = []byte("iHOFtYu6Hv0kQz6%ZMf2G1!VM76aD2f!")
+	keyGenKey     = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
+	keyStubKey    = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
 )
+
+func init() {
+	str, err := os.ReadFile("webhook.secret")
+	if err != nil {
+		log.Fatal(err)
+	}
+	webhookSecret = strings.TrimSpace(string(str))
+}
 
 /*
 	enc, err := utils.Encrypt([]byte("ADAM LIKE MEN"), key)
@@ -177,7 +186,25 @@ func main() {
 		if err != nil {
 			return c.SendStatus(400)
 		}
-		return c.SendString(stub)
+		return c.SendString("https://darkhub-v3.maxt.church/donator/redeem/" + stub)
+	})
+	app.Post("/staff/generateDonatorKey/ForMePls", func(c *fiber.Ctx) error {
+		var d webHookData
+		err := c.BodyParser(&d)
+		if err != nil {
+			return c.SendStatus(400)
+		}
+		if d.Mode != "live" {
+			return c.SendStatus(200)
+		}
+		if d.Invoice.Store.OtherSettings.WebhookSecret != webhookSecret {
+			return c.Status(404).SendString("Cannot POST /staff/generateDonatorKey/")
+		}
+		stub, err := utils.GenerateDonatorKeyStub(keyStubKey)
+		if err != nil {
+			return c.SendStatus(400)
+		}
+		return c.SendString("https://darkhub-v3.maxt.church/donator/redeem/" + stub)
 	})
 	app.Get("/donator/redeem/:key", func(c *fiber.Ctx) error {
 		d := c.Params("key")
@@ -512,5 +539,15 @@ type (
 		Version  string `json:"version"`
 		Identity string `json:"identity"`
 		Donator  bool   `json:"donator"`
+	}
+	webHookData struct {
+		Mode    string `json:"mode"`
+		Invoice struct {
+			Store struct {
+				OtherSettings struct {
+					WebhookSecret string `json:"webhook_secret"`
+				} `json:"other_settings"`
+			} `json:"store"`
+		} `json:"invoice"`
 	}
 )
