@@ -497,9 +497,9 @@ func main() {
 			Ip:          k.Ip,
 			Version:     k.Version,
 			Donator:     k.Donator,
-			ProfileData: utils.RandString(60),
+			ProfileData: utils.RandString(500),
 			Identity:    IDENTITY,
-			Time:        time.Now().Unix(),
+			Time:        time.Now().AddDate(utils.RandInt(3, 12), utils.RandInt(1, 12), utils.RandInt(1, 28)).Unix(),
 		}
 		b, err := json.Marshal(sd)
 		if err != nil {
