@@ -506,8 +506,7 @@ func main() {
 			fmt.Println("json marshal err: ", err)
 			return c.Redirect(c.OriginalURL())
 		}
-		enc := utils.EncryptSendData(b)
-		return c.SendString(enc)
+		return c.SendString(utils.EncryptSendData(b))
 	})
 	app.Get("/what/the/he/ll/is/my/ip", func(c *fiber.Ctx) error {
 		if c.GetReqHeaders()["Id"] != IDENTITY {
