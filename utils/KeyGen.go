@@ -48,7 +48,7 @@ func ParseKey(key string, keyGenKey []byte) (Key, error) {
 	return keyStruct, nil
 }
 
-func CheckKey(key, ip, version string, keyGenKey []byte) (bool, error) {
+func CheckKey(key, ip, version string, donatorVersion *string, keyGenKey []byte) (bool, error) {
 	keyStruct, err := ParseKey(key, keyGenKey)
 	if err != nil {
 		fmt.Println(err)
@@ -59,6 +59,9 @@ func CheckKey(key, ip, version string, keyGenKey []byte) (bool, error) {
 	}
 	if keyStruct.Donator {
 		loadConfig()
+		if keyStruct.Version != *donatorVersion {
+			return false, nil
+		}
 		if keyStruct.DonatorID >= 0 {
 			for _, id := range DC.ActiveIDs {
 				if keyStruct.DonatorID == id {

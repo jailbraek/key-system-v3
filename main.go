@@ -2,9 +2,10 @@ package main
 
 import (
 	"DarkHub-KeySys-V3/utils"
-	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"log"
 	"os"
@@ -27,10 +28,11 @@ const (
 )
 
 var (
-	webhookSecret = ""
-	key           = []byte("iHOFtYu6Hv0kQz6%ZMf2G1!VM76aD2f!")
-	keyGenKey     = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
-	keyStubKey    = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
+	DONATORVERSION = "v3.0.3"
+	webhookSecret  = ""
+	key            = []byte("iHOFtYu6Hv0kQz6%ZMf2G1!VM76aD2f!")
+	keyGenKey      = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
+	keyStubKey     = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
 )
 
 func init() {
@@ -41,26 +43,26 @@ func init() {
 	webhookSecret = strings.TrimSpace(string(str))
 }
 
-/*
-	enc, err := utils.Encrypt([]byte("ADAM LIKE MEN"), key)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(enc)
-	normal, err := utils.Decrypt(enc, key)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(normal)
-*/
-
 func main() {
+	err := os.Setenv("dev", "true")
+	if err != nil {
+		log.Fatal(err)
+	}
 	app := fiber.New(fiber.Config{
 		Prefork:           true,
 		ServerHeader:      "Your Mom's fat cock",
 		ProxyHeader:       "CF-Connecting-IP",
+		ReadBufferSize:    8192,
 		AppName:           "DarkHub KeySys " + VERSION,
 		ReduceMemoryUsage: true,
+		JSONEncoder:       json.Marshal,
+		JSONDecoder:       json.Unmarshal,
+	})
+	app.Use(compress.New(compress.Config{
+		Level: compress.LevelBestCompression,
+	}))
+	app.Get("/robots.txt", func(c *fiber.Ctx) error {
+		return c.SendString("User-agent: *\nDisallow: /")
 	})
 	app.Get("/discord", func(c *fiber.Ctx) error {
 		data, err := os.ReadFile("discordinvite.txt")
@@ -88,7 +90,7 @@ func main() {
 				return c.Redirect("/")
 			}
 			if string(k) != keyFiller {
-				ck, err := utils.CheckKey(k, ip, VERSION, keyGenKey)
+				ck, err := utils.CheckKey(k, ip, VERSION, &DONATORVERSION, keyGenKey)
 				if err != nil {
 					c.ClearCookie(KEY)
 				}
@@ -108,7 +110,7 @@ func main() {
 			b := fiber.Cookie{
 				Name:    BID,
 				Value:   enc,
-				Expires: time.Now().Add(time.Hour * 24 * 365 * 10),
+				Expires: time.Now().AddDate(5, 0, 0),
 			}
 			c.Cookie(&b)
 		} else {
@@ -124,8 +126,6 @@ func main() {
 			BrowserID:   bid,
 			CheckPoint:  0,
 			DarkhubBest: true,
-			Darkhub:     "darkhubdarkhubdarkhub is the best",
-			Penis:       "penis penis penis penis penis penis, adam likes big men",
 			AdamLikeMen: true,
 		}
 		cpData, err := json.Marshal(cp)
@@ -204,11 +204,12 @@ func main() {
 		if err != nil {
 			return c.SendStatus(400)
 		}
+
 		return c.SendString("https://darkhub-v3.maxt.church/donator/redeem/" + stub)
 	})
 	app.Get("/donator/redeem/:key", func(c *fiber.Ctx) error {
 		d := c.Params("key")
-		e := utils.RedeemKeyStub(d, utils.HashIP(c.IP()), VERSION, keyStubKey, keyGenKey)
+		e := utils.RedeemKeyStub(d, utils.HashIP(c.IP()), DONATORVERSION, keyStubKey, keyGenKey)
 		if len(e) == 0 {
 			return c.Status(404).SendString("Cannot GET /donator/redeem/" + d)
 		}
@@ -220,7 +221,7 @@ func main() {
 		cookie := fiber.Cookie{
 			Name:    KEY,
 			Value:   enc,
-			Expires: time.Now().Add(time.Hour * 24 * 365 * 10),
+			Expires: time.Now().AddDate(5, 0, 0),
 		}
 		c.Cookie(&cookie)
 		return c.SendString(e)
@@ -228,7 +229,10 @@ func main() {
 	checkpoints := app.Group("/checkpoints")
 	checkpoints.Get("/1", func(c *fiber.Ctx) error {
 		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
-			return c.Redirect("/")
+			fmt.Println(os.Getenv("dev"))
+			if os.Getenv("dev") != "true" {
+				return c.Status(404).SendString("Cannot GET /checkpoints/1")
+			}
 		}
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
@@ -267,8 +271,6 @@ func main() {
 			BrowserID:   bid,
 			CheckPoint:  1,
 			DarkhubBest: true,
-			Darkhub:     "darkhubdarkhubdarkhub is the best",
-			Penis:       "penis penis penis penis penis penis, adam likes big men",
 			AdamLikeMen: true,
 		}
 		data, err := json.Marshal(check)
@@ -291,7 +293,9 @@ func main() {
 	})
 	checkpoints.Get("/2", func(c *fiber.Ctx) error {
 		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
-			return c.Redirect("/")
+			if os.Getenv("dev") != "true" {
+				return c.Status(404).SendString("Cannot GET /checkpoints/1")
+			}
 		}
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
@@ -349,8 +353,6 @@ func main() {
 			BrowserID:   bid,
 			CheckPoint:  2,
 			DarkhubBest: true,
-			Darkhub:     "darkhubdarkhubdarkhub is the best",
-			Penis:       "penis penis penis penis penis penis, adam likes big men",
 			AdamLikeMen: true,
 		}
 		data, err := json.Marshal(check)
@@ -435,7 +437,7 @@ func main() {
 			fmt.Println("key gen err: ", err)
 			return c.Redirect("/")
 		}
-		if b, err := utils.CheckKey(k, ip, VERSION, keyGenKey); !b || err != nil {
+		if b, err := utils.CheckKey(k, ip, VERSION, &DONATORVERSION, keyGenKey); !b || err != nil {
 			k, err = utils.GenerateKey(ip, VERSION, keyGenKey, false, 0, time.Now().Add(time.Hour*24).Unix())
 		}
 		enc, err := utils.Encrypt([]byte(k), key)
@@ -457,7 +459,7 @@ func main() {
 			return c.Redirect("/")
 		}
 		k, err := utils.Decrypt(k, key)
-		vaild, err := utils.CheckKey(k, utils.HashIP(c.IP()), VERSION, keyGenKey)
+		vaild, err := utils.CheckKey(k, utils.HashIP(c.IP()), VERSION, &DONATORVERSION, keyGenKey)
 		if err != nil {
 			fmt.Println("key check err: ", err)
 			c.ClearCookie(KEY)
@@ -482,7 +484,7 @@ func main() {
 		if d.Key == "" || len(d.Key) <= 100 {
 			return c.SendStatus(400)
 		}
-		if b, err := utils.CheckKey(d.Key, ip, VERSION, keyGenKey); !b || err != nil {
+		if b, err := utils.CheckKey(d.Key, ip, VERSION, &DONATORVERSION, keyGenKey); !b || err != nil {
 			return c.SendStatus(400)
 		}
 		k, err := utils.ParseKey(d.Key, keyGenKey)
@@ -496,6 +498,7 @@ func main() {
 			Version:  k.Version,
 			Donator:  k.Donator,
 			Identity: IDENTITY,
+			Time:     time.Now().Unix(),
 		}
 		b, err := json.Marshal(sd)
 		if err != nil {
@@ -516,7 +519,7 @@ func main() {
 			"status": "up",
 		})
 	})
-	log.Fatalln(app.Listen(":5001"))
+	log.Fatalln(app.Listen(":5002"))
 }
 
 type (
@@ -526,8 +529,6 @@ type (
 		BrowserID   string `json:"browserID"`
 		CheckPoint  int    `json:"checkPoint"`
 		DarkhubBest bool   `json:"darkhubBest"`
-		Darkhub     string `json:"darkhub"`
-		Penis       string `json:"penis"`
 		AdamLikeMen bool   `json:"adamLikeMen"`
 	}
 	checkKeyBody struct {
@@ -539,6 +540,7 @@ type (
 		Version  string `json:"version"`
 		Identity string `json:"identity"`
 		Donator  bool   `json:"donator"`
+		Time     int64  `json:"time"`
 	}
 	webHookData struct {
 		Mode    string `json:"mode"`
