@@ -493,12 +493,13 @@ func main() {
 			return c.Redirect("/")
 		}
 		var sd = sendData{
-			Key:      d.Key,
-			Ip:       k.Ip,
-			Version:  k.Version,
-			Donator:  k.Donator,
-			Identity: IDENTITY,
-			Time:     time.Now().Unix(),
+			Key:         d.Key,
+			Ip:          k.Ip,
+			Version:     k.Version,
+			Donator:     k.Donator,
+			ProfileData: utils.RandString(60),
+			Identity:    IDENTITY,
+			Time:        time.Now().Unix(),
 		}
 		b, err := json.Marshal(sd)
 		if err != nil {
@@ -535,12 +536,13 @@ type (
 		Key string `json:"key"`
 	}
 	sendData struct {
-		Key      string `json:"key"`
-		Ip       string `json:"ip"`
-		Version  string `json:"version"`
-		Identity string `json:"identity"`
-		Donator  bool   `json:"donator"`
-		Time     int64  `json:"time"`
+		Key         string `json:"key"`
+		Ip          string `json:"ip"`
+		Version     string `json:"version"`
+		Identity    string `json:"identity"`
+		ProfileData string `json:"profileData"`
+		Donator     bool   `json:"donator"`
+		Time        int64  `json:"time"`
 	}
 	webHookData struct {
 		Mode    string `json:"mode"`
