@@ -20,8 +20,7 @@ const (
 	KEY            = "Ve"
 	BID            = "eb"
 	STAFFK         = "sfd"
-	VERSION        = "v3.0.2"
-	IDENTITY       = "DARKHUB-v3.0.2-WEUGo5YJPkFe4eMH5V2Cvkq3oHFYuV"
+	VERSION        = "v3.0.3"
 	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
 	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
 	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
@@ -33,7 +32,24 @@ var (
 	key            = []byte("iHOFtYu6Hv0kQz6%ZMf2G1!VM76aD2f!")
 	keyGenKey      = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
 	keyStubKey     = []byte("8If05g51m6uF&Oe#0QZGUb4#j2rKVizb")
+	IDENTITY       = "DARKHUB-" + VERSION + "-" + utils.RandString(40)
 )
+
+func init() {
+	if fiber.IsChild() {
+		id, err := os.ReadFile("IDENTITY")
+		if err != nil {
+			log.Fatal(err)
+		}
+		IDENTITY = string(id)
+		return
+	} else {
+		err := os.WriteFile("IDENTITY", []byte(IDENTITY), 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
 
 func init() {
 	str, err := os.ReadFile("webhook.secret")
@@ -502,7 +518,7 @@ func main() {
 			fmt.Println("json marshal err: ", err)
 			return c.Redirect(c.OriginalURL())
 		}
-		return c.SendString(utils.EncryptSendData(b))
+		return c.SendString(utils.FunnyEncoding(b))
 	})
 	app.Get("/what/the/he/ll/is/my/ip", func(c *fiber.Ctx) error {
 		if c.GetReqHeaders()["Id"] != IDENTITY {
@@ -515,6 +531,9 @@ func main() {
 		return c.JSON(fiber.Map{
 			"status": "up",
 		})
+	})
+	app.Get("/what/the/fu/ck/is/the/version/babe", func(c *fiber.Ctx) error {
+		return c.SendString(utils.FunnyEncoding([]byte("{\"version\":\"" + VERSION + "\"}")))
 	})
 	log.Fatalln(app.Listen(":5002"))
 }

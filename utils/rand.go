@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"encoding/base64"
 	"math/rand"
 	"time"
+	"unsafe"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -30,7 +30,7 @@ func RandString(n int) string {
 		remain--
 	}
 
-	return base64.URLEncoding.EncodeToString(b)
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 func RandInt(min, max int) int {
