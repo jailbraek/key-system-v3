@@ -439,9 +439,7 @@ func main() {
 			return c.Redirect("/")
 		}
 		if home.Ip != ip || cp1.Ip != ip || cp2.Ip != ip || home.BrowserID != bid || cp1.BrowserID != bid || cp2.BrowserID != bid || home.Time < time.Now().Unix()-((60*16)*1000) || cp1.Time < time.Now().Unix()-((60*14)*1000) || cp2.Time < time.Now().Unix()-((60*12)*1000) {
-			c.ClearCookie(HOME)
-			c.ClearCookie(CHECKPOINT1)
-			c.ClearCookie(CHECKPOINT2)
+			resetCookies(c)
 			return c.Redirect("/")
 		}
 		k, err := utils.GenerateKey(ip, VERSION, keyGenKey, false, 0, time.Now().Add(time.Hour*24).Unix())
@@ -463,6 +461,7 @@ func main() {
 			Expires: time.Now().Add(time.Hour * 24),
 		}
 		c.Cookie(&cookie)
+		resetCookies(c)
 		return c.SendString(k)
 	})
 	app.Get("/I/made/this/in/3/hrs/and/it/works", func(c *fiber.Ctx) error {
@@ -570,3 +569,35 @@ type (
 		} `json:"invoice"`
 	}
 )
+
+func resetCookies(c *fiber.Ctx) {
+	enc, err := utils.Encrypt([]byte("PENIS PENIS PENIS PENIS PENIS PENIS WTF HOW DID I FORGET THIS EARLIER?"), key)
+	cookie := fiber.Cookie{
+		Name:    HOME,
+		Value:   enc,
+		Expires: time.Now().Add(time.Hour * 24),
+	}
+	c.Cookie(&cookie)
+	cp1Data, err := utils.Encrypt([]byte(Checkpoint1Url), key)
+	if err != nil {
+		fmt.Println("Some kid just fucked with enc: ", err)
+		return
+	}
+	cp1 := fiber.Cookie{
+		Name:    CHECKPOINT1,
+		Value:   cp1Data,
+		Expires: time.Now().Add(time.Hour * 24),
+	}
+	c.Cookie(&cp1)
+	cp2Data, err := utils.Encrypt([]byte(Checkpoint2Url), key)
+	if err != nil {
+		fmt.Println("Some kid just fucked with enc: ", err)
+		return
+	}
+	cp2 := fiber.Cookie{
+		Name:    CHECKPOINT2,
+		Value:   cp2Data,
+		Expires: time.Now().Add(time.Hour * 24),
+	}
+	c.Cookie(&cp2)
+}
