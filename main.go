@@ -44,10 +44,6 @@ func init() {
 }
 
 func main() {
-	err := os.Setenv("dev", "true")
-	if err != nil {
-		log.Fatal(err)
-	}
 	app := fiber.New(fiber.Config{
 		Prefork:           true,
 		ServerHeader:      "Your Mom's fat cock",
