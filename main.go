@@ -20,7 +20,7 @@ const (
 	KEY            = "Ve"
 	BID            = "eb"
 	STAFFK         = "sfd"
-	VERSION        = "v3.0.3"
+	VERSION        = "v3.0.4"
 	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
 	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
 	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
@@ -218,6 +218,18 @@ func main() {
 		}
 
 		return c.SendString("https://darkhub-v3.maxt.church/donator/redeem/" + stub)
+	})
+	app.Post("/staff/debug/key/for/me/rn", func(c *fiber.Ctx) error {
+		if c.Cookies(STAFFK) != "true" {
+			return c.Status(404).SendString("Cannot POST /staff/debug/key/for/me/rn")
+		}
+		var body checkKeyBody
+		err := c.BodyParser(&body)
+		if err != nil {
+			return c.SendStatus(400)
+		}
+		a, err := utils.ParseKey(body.Key, keyGenKey)
+		return c.JSON(a)
 	})
 	app.Get("/donator/redeem/:key", func(c *fiber.Ctx) error {
 		d := c.Params("key")
@@ -520,11 +532,7 @@ func main() {
 		return c.SendString(utils.FunnyEncoding(b))
 	})
 	app.Get("/what/the/he/ll/is/my/ip", func(c *fiber.Ctx) error {
-		if c.GetReqHeaders()["Id"] != IDENTITY {
-			return c.SendStatus(403)
-		}
-		ip := utils.HashIP(c.IP())
-		return c.SendString(ip)
+		return c.SendString(utils.HashIP(c.IP()))
 	})
 	app.Get("/status", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
