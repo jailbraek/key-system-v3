@@ -532,6 +532,11 @@ func main() {
 		return c.SendString(utils.FunnyEncoding(b))
 	})
 	app.Get("/what/the/he/ll/is/my/ip", func(c *fiber.Ctx) error {
+		/*
+			if c.GetReqHeaders()["Id"] != IDENTITY {
+				return c.SendStatus(403)
+			}
+		*/
 		return c.SendString(utils.HashIP(c.IP()))
 	})
 	app.Get("/status", func(c *fiber.Ctx) error {
