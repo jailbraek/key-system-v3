@@ -6,6 +6,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"log"
 	"os"
@@ -14,16 +15,19 @@ import (
 )
 
 const (
-	HOME           = "b2"
-	CHECKPOINT1    = "3g"
-	CHECKPOINT2    = "BH"
-	KEY            = "Ve"
-	BID            = "eb"
-	STAFFK         = "sfd"
-	VERSION        = "v3.0.4"
-	Checkpoint1Url = "https://work.ink/l/1n8/DarkHubKey1"
-	Checkpoint2Url = "https://work.ink/en/l/1n8/DarkHubKey2"
-	keyFiller      = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
+	HOME                      = "b2"
+	CHECKPOINT1               = "3g"
+	CHECKPOINT2               = "BH"
+	KEY                       = "Ve"
+	BID                       = "eb"
+	STAFFK                    = "sfd"
+	LINKVERTISECOOKIE         = "saa"
+	VERSION                   = "v3.1.0"
+	Checkpoint1Url            = "https://work.ink/l/1n8/DarkHubKey1"
+	LinkvertiseCheckpoint1Url = "https://link-center.net/224166/darkhub-key"
+	Checkpoint2Url            = "https://work.ink/en/l/1n8/DarkHubKey2"
+	LinkvertiseCheckpoint2Url = "https://link-hub.net/224166/darkhub-checkpoint"
+	keyFiller                 = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
 )
 
 var (
@@ -72,6 +76,11 @@ func main() {
 	})
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestCompression,
+	}))
+	app.Use(limiter.New(limiter.Config{
+		Max:               10,
+		Expiration:        30 * time.Second,
+		LimiterMiddleware: limiter.SlidingWindow{},
 	}))
 	app.Get("/robots.txt", func(c *fiber.Ctx) error {
 		return c.SendString("User-agent: *\nDisallow: /")
@@ -188,6 +197,14 @@ func main() {
 			Expires: time.Now().Add(time.Hour * 24),
 		}
 		c.Cookie(&cookie)
+		linkvertise := c.Cookies(LINKVERTISECOOKIE, "false")
+		linkvertise, err = utils.Decrypt(linkvertise, keyStubKey)
+		if err != nil {
+			return c.Redirect(Checkpoint1Url)
+		}
+		if linkvertise == "true" {
+			return c.Redirect(LinkvertiseCheckpoint1Url)
+		}
 		return c.Redirect(Checkpoint1Url)
 	})
 	app.Get("/staff/generateDonatorKey/ForMePls", func(c *fiber.Ctx) error {
@@ -250,10 +267,22 @@ func main() {
 		c.Cookie(&cookie)
 		return c.SendString(e)
 	})
+	app.Get("/so/adam/made/me/add/this/so/u/will/use/linkvertse", func(c *fiber.Ctx) error {
+		enc, err := utils.Encrypt([]byte("true"), keyStubKey)
+		if err != nil {
+			return c.SendStatus(500)
+		}
+		cookie := fiber.Cookie{
+			Name:    LINKVERTISECOOKIE,
+			Value:   enc,
+			Expires: time.Now().AddDate(2, 0, 0),
+		}
+		c.Cookie(&cookie)
+		return c.Redirect("/")
+	})
 	checkpoints := app.Group("/checkpoints")
 	checkpoints.Get("/1", func(c *fiber.Ctx) error {
-		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
-			fmt.Println(os.Getenv("dev"))
+		if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
 			if os.Getenv("dev") != "true" {
 				return c.Status(404).SendString("Cannot GET /checkpoints/1")
 			}
@@ -288,7 +317,9 @@ func main() {
 			c.ClearCookie(HOME)
 			return c.Redirect("/")
 		}
-
+		if time.Now().Unix() < cp.Time+15 {
+			return c.SendString("Please wait a few more seconds!!!!!! 15 seconds to be exact cause we added linkvertise!!!!")
+		}
 		check := check{
 			Ip:          ip,
 			Time:        time.Now().Unix(),
@@ -313,10 +344,18 @@ func main() {
 			Expires: time.Now().Add(time.Hour * 24),
 		}
 		c.Cookie(&cookie)
+		linkvertise := c.Cookies(LINKVERTISECOOKIE, "false")
+		linkvertise, err = utils.Decrypt(linkvertise, keyStubKey)
+		if err != nil {
+			return c.SendStatus(500)
+		}
+		if linkvertise == "true" {
+			return c.Redirect(LinkvertiseCheckpoint2Url)
+		}
 		return c.Redirect(Checkpoint2Url)
 	})
 	checkpoints.Get("/2", func(c *fiber.Ctx) error {
-		if c.GetReqHeaders()["Referer"] != "https://work.ink/" {
+		if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
 			if os.Getenv("dev") != "true" {
 				return c.Status(404).SendString("Cannot GET /checkpoints/1")
 			}
@@ -370,6 +409,9 @@ func main() {
 			c.ClearCookie(HOME)
 			c.ClearCookie(CHECKPOINT1)
 			return c.Redirect("/")
+		}
+		if time.Now().Unix() < cp.Time+15 || time.Now().Unix() < cp1.Time+15 {
+			return c.SendString("Please wait a few more seconds!!!!!! 15 seconds to be exact cause we added linkvertise!!!!")
 		}
 		check := check{
 			Ip:          ip,
