@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -22,7 +23,8 @@ const (
 	BID                       = "eb"
 	STAFFK                    = "sfd"
 	LINKVERTISECOOKIE         = "saa"
-	VERSION                   = "v3.1.0"
+	LINKVERTISEDEFAULTVALUE   = "fT3FvNko6S2svFGlarDqDZ_qXUASAuZ8BcWR-A0HDXgz"
+	VERSION                   = "v3.1.3"
 	Checkpoint1Url            = "https://work.ink/l/1n8/DarkHubKey1"
 	LinkvertiseCheckpoint1Url = "https://link-center.net/224166/darkhub-key"
 	Checkpoint2Url            = "https://work.ink/en/l/1n8/DarkHubKey2"
@@ -197,7 +199,7 @@ func main() {
 			Expires: time.Now().Add(time.Hour * 24),
 		}
 		c.Cookie(&cookie)
-		linkvertise := c.Cookies(LINKVERTISECOOKIE, "false")
+		linkvertise := c.Cookies(LINKVERTISECOOKIE, LINKVERTISEDEFAULTVALUE)
 		linkvertise, err = utils.Decrypt(linkvertise, keyStubKey)
 		if err != nil {
 			return c.Redirect(Checkpoint1Url)
@@ -267,7 +269,7 @@ func main() {
 		c.Cookie(&cookie)
 		return c.SendString(e)
 	})
-	app.Get("/so/adam/made/me/add/this/so/u/will/use/linkvertse", func(c *fiber.Ctx) error {
+	app.Get("/so/adam/made/me/add/this/so/u/will/use/linkvertise", func(c *fiber.Ctx) error {
 		enc, err := utils.Encrypt([]byte("true"), keyStubKey)
 		if err != nil {
 			return c.SendStatus(500)
@@ -282,11 +284,11 @@ func main() {
 	})
 	checkpoints := app.Group("/checkpoints")
 	checkpoints.Get("/1", func(c *fiber.Ctx) error {
-		if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
+		/*if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
 			if os.Getenv("dev") != "true" {
 				return c.Status(404).SendString("Cannot GET /checkpoints/1")
 			}
-		}
+		}*/
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
 		if len(home) == 0 {
@@ -317,8 +319,8 @@ func main() {
 			c.ClearCookie(HOME)
 			return c.Redirect("/")
 		}
-		if time.Now().Unix() < cp.Time+15 {
-			return c.SendString("Please wait a few more seconds!!!!!! 15 seconds to be exact cause we added linkvertise!!!!")
+		if time.Now().Unix() < cp.Time+rand.Int63n(10)+5 {
+			return c.SendString("Please wait a few more seconds!!!!!! cause we added linkvertise!!!!")
 		}
 		check := check{
 			Ip:          ip,
@@ -344,7 +346,7 @@ func main() {
 			Expires: time.Now().Add(time.Hour * 24),
 		}
 		c.Cookie(&cookie)
-		linkvertise := c.Cookies(LINKVERTISECOOKIE, "false")
+		linkvertise := c.Cookies(LINKVERTISECOOKIE, LINKVERTISEDEFAULTVALUE)
 		linkvertise, err = utils.Decrypt(linkvertise, keyStubKey)
 		if err != nil {
 			return c.SendStatus(500)
@@ -355,11 +357,11 @@ func main() {
 		return c.Redirect(Checkpoint2Url)
 	})
 	checkpoints.Get("/2", func(c *fiber.Ctx) error {
-		if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
+		/*if c.GetReqHeaders()["Referer"] != "https://work.ink/" || c.GetReqHeaders()["Referer"] == "https://linkvertise.com" {
 			if os.Getenv("dev") != "true" {
 				return c.Status(404).SendString("Cannot GET /checkpoints/1")
 			}
-		}
+		}*/
 		ip := utils.HashIP(c.IP())
 		home := c.Cookies(HOME)
 		cp1Data := c.Cookies(CHECKPOINT1)
@@ -410,8 +412,8 @@ func main() {
 			c.ClearCookie(CHECKPOINT1)
 			return c.Redirect("/")
 		}
-		if time.Now().Unix() < cp.Time+15 || time.Now().Unix() < cp1.Time+15 {
-			return c.SendString("Please wait a few more seconds!!!!!! 15 seconds to be exact cause we added linkvertise!!!!")
+		if time.Now().Unix() < cp.Time+15 || time.Now().Unix() < cp1.Time+rand.Int63n(10)+5 {
+			return c.SendString("Please wait a few more seconds!!!!!! cause we added linkvertise!!!!")
 		}
 		check := check{
 			Ip:          ip,
