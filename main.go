@@ -25,10 +25,10 @@ const (
 	LINKVERTISECOOKIE         = "saa"
 	LINKVERTISEDEFAULTVALUE   = "fT3FvNko6S2svFGlarDqDZ_qXUASAuZ8BcWR-A0HDXgz"
 	VERSION                   = "v3.1.3"
-	Checkpoint1Url            = "https://work.ink/l/1n8/DarkHubKey1"
-	LinkvertiseCheckpoint1Url = "https://link-center.net/224166/darkhub-key"
-	Checkpoint2Url            = "https://work.ink/en/l/1n8/DarkHubKey2"
-	LinkvertiseCheckpoint2Url = "https://link-hub.net/224166/darkhub-checkpoint"
+	Checkpoint1Url            = "https://direct-link.net/929632/project-auto-autofarm1"
+	LinkvertiseCheckpoint1Url = "https://direct-link.net/929632/project-auto-autofarm1"
+	Checkpoint2Url            = "https://link-center.net/929632/project-auto-autofarm2"
+	LinkvertiseCheckpoint2Url = "https://link-center.net/929632/project-auto-autofarm2"
 	keyFiller                 = "penispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenispenis"
 )
 
